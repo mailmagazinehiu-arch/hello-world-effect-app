@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World Effect App</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+
+        .hello-world {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            user-select: none;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .hello-world:hover {
+            transform: scale(1.1);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            }
+            to {
+                text-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+            }
+        }
+
+        .letter {
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+
+        .letter.disappearing {
+            animation: disappear 1s ease-in-out forwards;
+        }
+
+        @keyframes disappear {
+            0% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle-explosion 1s ease-out forwards;
+        }
+
+        @keyframes particle-explosion {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.1) translate(var(--tx), var(--ty));
+                opacity: 0;
+            }
+        }
+
+        .reset-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            padding: 15px 30px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .reset-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="stars" id="stars"></div>
+    <div class="hello-world" id="helloWorld">Hello World!</div>
+    <button class="reset-btn" id="resetBtn">リセット</button>
+
+    <script>
+        // 星を生成
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.animationDelay = Math.random() * 3 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // パーティクルエフェクトを作成
+        function createParticles(x, y) {
+            const particleCount = 20;
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const velocity = 100 + Math.random() * 100;
+                const tx = Math.cos(angle) * velocity;
+                const ty = Math.sin(angle) * velocity;
+                
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.setProperty('--ty', ty + 'px');
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 1000);
+            }
+        }
+
+        // 効果音を再生
+        function playSound() {
+            // Web Audio APIを使用してビープ音を生成
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.1);
+            oscillator.frequency.exponentialRampToValueAtTime(220, audioContext.currentTime + 0.3);
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // 文字を個別のspanに分割
+        function splitTextIntoLetters() {
+            const helloWorld = document.getElementById('helloWorld');
+            const text = helloWorld.textContent;
+            helloWorld.innerHTML = '';
+            
+            for (let char of text) {
+                const span = document.createElement('span');
+                span.className = 'letter';
+                span.textContent = char;
+                helloWorld.appendChild(span);
+            }
+        }
+
+        // 文字をクリックして消滅させる
+        function setupLetterClick() {
+            const helloWorld = document.getElementById('helloWorld');
+            
+            helloWorld.addEventListener('click', (e) => {
+                if (e.target.classList.contains('letter') && !e.target.classList.contains('disappearing')) {
+                    const rect = e.target.getBoundingClientRect();
+                    const x = rect.left + rect.width / 2;
+                    const y = rect.top + rect.height / 2;
+                    
+                    e.target.classList.add('disappearing');
+                    createParticles(x, y);
+                    playSound();
+                    
+                    setTimeout(() => {
+                        e.target.style.visibility = 'hidden';
+                    }, 1000);
+                }
+            });
+        }
+
+        // リセット機能
+        function setupReset() {
+            const resetBtn = document.getElementById('resetBtn');
+            resetBtn.addEventListener('click', () => {
+                const helloWorld = document.getElementById('helloWorld');
+                helloWorld.textContent = 'Hello World!';
+                splitTextIntoLetters();
+                setupLetterClick();
+            });
+        }
+
+        // 初期化
+        function init() {
+            createStars();
+            splitTextIntoLetters();
+            setupLetterClick();
+            setupReset();
+        }
+
+        // ページ読み込み後に初期化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
