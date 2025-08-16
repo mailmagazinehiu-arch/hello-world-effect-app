@@ -200,6 +200,17 @@
             border-radius: 50px 50px 20px 20px;
             animation: ufo-fly 15s linear infinite;
             z-index: 10;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .ufo:hover {
+            transform: scale(1.2);
+            filter: brightness(1.5);
+        }
+        
+        .ufo.clicked {
+            animation: ufo-spin 1s ease-in-out, ufo-fly 15s linear infinite;
         }
 
         .ufo::before {
@@ -261,6 +272,30 @@
                 transform: scaleY(1.5);
             }
         }
+        
+        @keyframes ufo-spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes reset-pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            }
+        }
     </style>
 </head>
 <body>
@@ -288,6 +323,7 @@
             // UFOを生成
             const ufo = document.createElement('div');
             ufo.className = 'ufo';
+            ufo.addEventListener('click', handleUfoClick);
             starsContainer.appendChild(ufo);
         }
 
@@ -335,6 +371,63 @@
             
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.5);
+        }
+        
+        // UFO用効果音を再生
+        function playUfoSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.2);
+            oscillator.frequency.exponentialRampToValueAtTime(150, audioContext.currentTime + 0.6);
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.8);
+        }
+        
+        // リセット用効果音
+        function playResetSound() {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // C5
+            oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1); // E5
+            oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2); // G5
+            
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.4);
+        }
+        
+        // UFOクリック処理
+        function handleUfoClick(e) {
+            e.target.classList.add('clicked');
+            playUfoSound();
+            
+            // 画面全体にスペシャルパーティクル
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    createParticles(Math.random() * window.innerWidth, Math.random() * window.innerHeight);
+                }, i * 50);
+            }
+            
+            setTimeout(() => {
+                e.target.classList.remove('clicked');
+            }, 1000);
         }
 
         // 文字を個別のspanに分割
@@ -396,10 +489,23 @@
         function setupReset() {
             const resetBtn = document.getElementById('resetBtn');
             resetBtn.addEventListener('click', () => {
+                // リセットエフェクト
+                resetBtn.style.animation = 'reset-pulse 0.5s ease-in-out';
+                playResetSound();
+                
+                // 文字をリセット
                 const helloWorld = document.getElementById('helloWorld');
-                helloWorld.textContent = 'Hello World!';
-                splitTextIntoLetters();
-                setupLetterClick();
+                helloWorld.style.animation = 'reset-pulse 0.5s ease-in-out';
+                
+                setTimeout(() => {
+                    helloWorld.textContent = 'Hello World!';
+                    splitTextIntoLetters();
+                    setupLetterClick();
+                    
+                    // アニメーションをリセット
+                    resetBtn.style.animation = '';
+                    helloWorld.style.animation = '';
+                }, 500);
             });
         }
 
