@@ -20,32 +20,17 @@
         .hello-world {
             font-size: 5rem;
             font-weight: bold;
-            background: linear-gradient(45deg, #ff0080, #ff8000, #ffff00, #80ff00, #00ff80, #0080ff, #8000ff, #ff0080);
-            background-size: 400% 400%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
             user-select: none;
-            animation: rainbow 3s ease-in-out infinite;
         }
 
         .hello-world:hover {
             transform: scale(1.1);
-        }
-
-        @keyframes rainbow {
-            0% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
-            100% {
-                background-position: 0% 50%;
-            }
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
         }
 
 
